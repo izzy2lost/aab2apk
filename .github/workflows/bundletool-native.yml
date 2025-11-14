@@ -1,4 +1,4 @@
-name: Build Native Bundletool ARM64
+name: Convert bundletool.jar to Native ARM64
 
 on:
   workflow_dispatch:
@@ -25,23 +25,16 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y unzip zip curl clang build-essential
 
-      - name: Download bundletool source
+      - name: Prepare bundletool JAR
         run: |
-          curl -L -o bundletool.zip https://github.com/google/bundletool/archive/refs/heads/master.zip
-          unzip bundletool.zip
-          mv bundletool-master bundletool-src
-          chmod +x bundletool-src/gradlew
+          mkdir -p bundletool
+          cp bundletool/bundletool.jar .
 
-      - name: Build bundletool.jar (using bundletool’s own Gradle)
-        working-directory: bundletool-src
-        run: |
-          ./gradlew build -x test
-          cp build/libs/bundletool-*.jar ../bundletool.jar
-
-      - name: Build Native Image (ARM64)
+      - name: Build Native ARM64 Bundletool
         run: |
           native-image \
             --no-fallback \
+            --static \
             -jar bundletool.jar \
             bundletool
 
