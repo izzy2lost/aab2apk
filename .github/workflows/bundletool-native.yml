@@ -36,7 +36,7 @@ jobs:
             --no-fallback \
             --static \
             -jar bundletool.jar \
-            bundletool
+            bundletool/bundletool
 
       - name: Upload Native Binary
         uses: actions/upload-artifact@v4
