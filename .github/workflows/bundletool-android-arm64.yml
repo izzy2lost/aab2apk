@@ -21,6 +21,7 @@ jobs:
         run: |
           docker buildx create --use || true
           docker buildx build --load --platform linux/arm64 \
+            -t bundletool-arm64-builder \
             -f - . <<'DOCKERFILE'
           FROM ubuntu:22.04
           RUN apt-get update && apt-get install -y curl unzip zip build-essential clang pkg-config zlib1g-dev openjdk-21-jdk-headless
@@ -34,10 +35,16 @@ jobs:
           RUN ls -lh bundletool-arm64
           DOCKERFILE
 
-      - name: Verify binary (if produced)
+      - name: Extract binary from container
         run: |
-          file bundletool-arm64 || true
-          ls -lh bundletool-arm64 || true
+          docker create --name temp-container --platform linux/arm64 bundletool-arm64-builder
+          docker cp temp-container:/work/bundletool-arm64 ./bundletool-arm64
+          docker rm temp-container
+
+      - name: Verify binary
+        run: |
+          file bundletool-arm64
+          ls -lh bundletool-arm64
 
       - name: Upload Native Binary
         uses: actions/upload-artifact@v4
