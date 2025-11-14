@@ -1,10 +1,10 @@
-name: Convert bundletool.jar to Native ARM64
+name: Build BundleTool Native for Android ARM64
 
 on:
   workflow_dispatch:
 
 jobs:
-  build-native:
+  build-android-arm64:
     runs-on: ubuntu-22.04
 
     steps:
@@ -20,29 +20,27 @@ jobs:
           components: "native-image"
           github-token: "${{ secrets.GITHUB_TOKEN }}"
 
-      - name: Install build deps
+      - name: Install cross-compilation toolchain
         run: |
           sudo apt-get update
-          sudo apt-get install -y unzip zip curl clang build-essential
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
 
-      - name: Prepare bundletool JAR
-        run: |
-          mkdir -p bundletool
-          cp bundletool/bundletool.jar .
-
-      - name: Build Native x64 Bundletool
+      - name: Build Native ARM64 Bundletool
         run: |
           native-image \
             --no-fallback \
-            -jar bundletool.jar \
-            bundletool-native
-          
-      - name: Move binary to bundletool directory
+            -H:+StaticExecutableWithDynamicLibC \
+            --target=aarch64-linux-gnu \
+            -jar bundletool/bundletool.jar \
+            bundletool-arm64
+
+      - name: Verify binary
         run: |
-          mv bundletool-native bundletool/bundletool-native
+          file bundletool-arm64
+          ls -lh bundletool-arm64
 
       - name: Upload Native Binary
         uses: actions/upload-artifact@v4
         with:
-          name: bundletool-native-linux-x64
-          path: bundletool/bundletool-native
+          name: bundletool-android-arm64
+          path: bundletool-arm64
