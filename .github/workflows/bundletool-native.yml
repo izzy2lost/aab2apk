@@ -1,4 +1,4 @@
-name: Convert bundletool.jar to Native ARM64
+name: Convert bundletool.jar to Native x64
 
 on:
   workflow_dispatch:
@@ -11,38 +11,31 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install GraalVM (Java 21)
-        uses: graalvm/setup-graalvm@v1
+      - name: Set up GraalVM (Java 21) with native-image
+        uses: graalvm/setup-graalvm@v2
         with:
-          distribution: "graalvm-community"
-          version: "22.0.1"
-          java-version: "21"
-          components: "native-image"
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          distribution: 'graalvm-ce'
+          graalvm-version: '23.3.2'
+          java-version: '21'
+          components: 'native-image'
+          github-token: '${{ secrets.GITHUB_TOKEN }}'
 
       - name: Install build deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y unzip zip curl clang build-essential
+          sudo apt-get install -y unzip zip clang build-essential pkg-config zlib1g-dev
 
       - name: Prepare bundletool JAR
         run: |
           mkdir -p bundletool
-          cp bundletool/bundletool.jar .
+          if [ ! -f bundletool/bundletool.jar ]; then echo "bundletool/bundletool.jar missing"; ls -la; exit 1; fi
 
       - name: Build Native x64 Bundletool
         run: |
-          native-image \
-            --no-fallback \
-            -jar bundletool.jar \
-            bundletool-native
-          
-      - name: Move binary to bundletool directory
-        run: |
-          mv bundletool-native bundletool/bundletool-native
+          native-image --no-fallback -jar bundletool/bundletool.jar -H:Name=bundletool-native
 
       - name: Upload Native Binary
         uses: actions/upload-artifact@v4
         with:
           name: bundletool-native-linux-x64
-          path: bundletool/bundletool-native
+          path: bundletool-native

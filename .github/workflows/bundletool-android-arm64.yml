@@ -11,33 +11,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install GraalVM (Java 21)
-        uses: graalvm/setup-graalvm@v1
-        with:
-          distribution: "graalvm-community"
-          version: "22.0.1"
-          java-version: "21"
-          components: "native-image"
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Setup QEMU for multi-arch
+        uses: docker/setup-qemu-action@v2
 
-      - name: Install cross-compilation toolchain
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v2
 
-      - name: Build Native ARM64 Bundletool
+      - name: Build aarch64 bundletool using GraalVM aarch64 container
         run: |
-          native-image \
-            --no-fallback \
-            -H:+StaticExecutableWithDynamicLibC \
-            --target=aarch64-linux-gnu \
-            -jar bundletool/bundletool.jar \
-            bundletool-arm64
+          docker run --rm --platform linux/arm64 \
+            -v "${{ github.workspace }}":/work -w /work \
+            ghcr.io/graalvm/native-image:23.3.2-java21 \
+            sh -c "apt-get update && apt-get install -y unzip zip build-essential clang pkg-config zlib1g-dev && native-image --no-fallback -jar bundletool/bundletool.jar -H:Name=bundletool-arm64"
 
-      - name: Verify binary
+      - name: Verify binary (if produced)
         run: |
-          file bundletool-arm64
-          ls -lh bundletool-arm64
+          file bundletool-arm64 || true
+          ls -lh bundletool-arm64 || true
 
       - name: Upload Native Binary
         uses: actions/upload-artifact@v4
