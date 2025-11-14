@@ -14,12 +14,13 @@ jobs:
       - name: Install GraalVM (Java 21)
         uses: graalvm/setup-graalvm@v1
         with:
-          version: "21.0.2"
+          distribution: "graalvm-community"
+          version: "22.0.1"
           java-version: "21"
           components: "native-image"
           github-token: "${{ secrets.GITHUB_TOKEN }}"
 
-      - name: Install build dependencies
+      - name: Install build deps
         run: |
           sudo apt-get update
           sudo apt-get install -y unzip zip curl clang build-essential
