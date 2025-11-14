@@ -17,12 +17,22 @@ jobs:
       - name: Setup Docker buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Build aarch64 bundletool using GraalVM aarch64 container
+      - name: Build aarch64 bundletool using buildx
         run: |
-          docker run --rm --platform linux/arm64 \
-            -v "${{ github.workspace }}":/work -w /work \
-            ghcr.io/graalvm/native-image:23.3.2-java21 \
-            sh -c "apt-get update && apt-get install -y unzip zip build-essential clang pkg-config zlib1g-dev && native-image --no-fallback -jar bundletool/bundletool.jar -H:Name=bundletool-arm64"
+          docker buildx create --use || true
+          docker buildx build --load --platform linux/arm64 \
+            -f - . <<'DOCKERFILE'
+          FROM ubuntu:22.04
+          RUN apt-get update && apt-get install -y curl unzip zip build-essential clang pkg-config zlib1g-dev openjdk-21-jdk-headless
+          WORKDIR /work
+          COPY bundletool/bundletool.jar .
+          RUN curl -L -O https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-23.3.2/graalvm-ce-java21-linux-aarch64-23.3.2.tar.gz \
+            && tar -xzf graalvm-ce-java21-linux-aarch64-23.3.2.tar.gz \
+            && rm graalvm-ce-java21-linux-aarch64-23.3.2.tar.gz
+          ENV PATH=/work/graalvm-ce-java21-23.3.2/bin:$PATH
+          RUN native-image --no-fallback -jar bundletool.jar -H:Name=bundletool-arm64
+          RUN ls -lh bundletool-arm64
+          DOCKERFILE
 
       - name: Verify binary (if produced)
         run: |

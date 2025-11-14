@@ -1,4 +1,4 @@
-package com.aab2apk.original
+package com.aab2apk.ui.components
 
 
 import androidx.compose.foundation.BorderStroke
@@ -23,7 +23,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ui.Styles
+import com.aab2apk.ui.Styles
 
 @Composable
 fun CustomTextField(value: String, label: String, forPassword: Boolean = true, onValueChange: (String) -> Unit) {

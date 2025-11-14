@@ -1,4 +1,4 @@
-package com.aab2apk.original
+package com.aab2apk.ui.components
 
 
 import androidx.compose.foundation.clickable
@@ -15,7 +15,7 @@ import androidx.compose.ui.res.useResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ui.Styles
+import com.aab2apk.ui.Styles
 
 @Composable
 fun TextWithIcon(label: String, onIconClick: () -> Unit) {

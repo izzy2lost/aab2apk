@@ -1,9 +1,9 @@
-package com.aab2apk.original
+package com.aab2apk.command
 
 
-import utils.Log
-import utils.SigningMode
-import utils.Utils
+import com.aab2apk.utils.Log
+import com.aab2apk.utils.SigningMode
+import com.aab2apk.utils.Utils
 
 class CommandBuilder {
     private var bundletoolPath: String = ""

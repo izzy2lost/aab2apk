@@ -1,4 +1,4 @@
-package com.aab2apk.original
+package com.aab2apk.ui.components
 
 
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -23,8 +23,8 @@ import androidx.compose.ui.res.useResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ui.Styles
-import utils.TestTags
+import com.aab2apk.ui.Styles
+import com.aab2apk.utils.TestTags
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

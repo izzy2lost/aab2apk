@@ -41,32 +41,49 @@ object AabToApkManager {
                 }
             }
 
-            // Ensure a bundletool asset (if packaged) is installed to filesDir and set executable
-            val bundletoolFile = File(context.filesDir, "bundletool")
+            // Check for bundletool.jar in assets and copy to internal storage
+            val bundletoolJarFile = File(context.filesDir, "bundletool.jar")
             try {
-                if (!bundletoolFile.exists()) {
-                    // Attempt to copy bundled asset (if present) into filesDir
-                    context.assets.open("bundletool").use { input ->
-                        bundletoolFile.outputStream().use { output -> input.copyTo(output) }
+                if (!bundletoolJarFile.exists()) {
+                    // Attempt to copy bundled jar (if present) into filesDir
+                    context.assets.open("bundletool.jar").use { input ->
+                        bundletoolJarFile.outputStream().use { output -> input.copyTo(output) }
                     }
-                    bundletoolFile.setExecutable(true)
                 }
             } catch (e: Exception) {
-                // If asset not present or copy failed, we'll proceed to check for an existing executable.
+                // If jar not present or copy failed, we'll proceed to check for an existing jar.
             }
-            if (bundletoolFile.exists() && bundletoolFile.canExecute()) {
+            
+            if (bundletoolJarFile.exists()) {
                 // Build output path
                 val outFile = File(context.filesDir, "output.apks")
-                val cmd = arrayListOf(bundletoolFile.absolutePath, "build-apks", "--bundle=${aabFile.absolutePath}", "--output=${outFile.absolutePath}", "--mode=universal")
+                
+                // Use Java runtime to execute bundletool.jar
+                val javaHome = System.getProperty("java.home")
+                val javaExecutable = File(javaHome, "bin/java").absolutePath
+                
+                val cmd = arrayListOf(
+                    javaExecutable,
+                    "-jar",
+                    bundletoolJarFile.absolutePath,
+                    "build-apks",
+                    "--bundle=${aabFile.absolutePath}",
+                    "--output=${outFile.absolutePath}",
+                    "--mode=universal"
+                )
+                
                 Log.i(TAG, "Running: ${cmd.joinToString(" ")}")
                 val procBuilder = ProcessBuilder(cmd)
                 procBuilder.redirectErrorStream(true)
+                procBuilder.environment()["JAVA_HOME"] = javaHome
+                
                 val proc = procBuilder.start()
                 val stdout = StringBuilder()
                 proc.inputStream.bufferedReader().useLines { lines ->
                     lines.forEach { stdout.append(it).append("\n") }
                 }
                 val exit = proc.waitFor()
+                
                 if (exit == 0) {
                     // If outputDirUri provided, copy the result there
                     if (outputDirUri != null) {
@@ -86,9 +103,9 @@ object AabToApkManager {
                     return@withContext Result.failure(Exception("bundletool failed with exit $exit\n${stdout}"))
                 }
             } else {
-                // No bundletool available — inform user what to do
-                val msg = """bundletool executable not found in app files.
-To convert an AAB to APK on-device you must provide a bundletool binary built for Android and place it at: ${context.filesDir}/bundletool
+                // No bundletool.jar available — inform user what to do
+                val msg = """bundletool.jar not found in app assets.
+To convert an AAB to APK on-device you must place bundletool.jar at: app/src/main/assets/bundletool.jar
 Alternatively, convert the AAB on a desktop using bundletool.jar:
 java -jar bundletool-all.jar build-apks --bundle=app.aab --output=app.apks --mode=universal
 Then transfer resulting .apks/.apks.zip to the phone."""

@@ -3,6 +3,11 @@ plugins {
     kotlin("android")
 }
 
+repositories {
+    google()
+    mavenCentral()
+}
+
 android {
     namespace = "com.aab2apk"
     compileSdk = 36

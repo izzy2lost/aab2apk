@@ -1,22 +1,12 @@
-package com.aab2apk.original
+package com.aab2apk.ui
 
-
-import androidx.compose.material.Typography
+import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.platform.Font
 import androidx.compose.ui.unit.sp
 
-val codeFontFamily = FontFamily(
-    Font(resource = "fonts/sans_regular.ttf", weight = FontWeight.Light),
-    Font(resource = "fonts/sans_thin.ttf", weight = FontWeight.Normal),
-    Font(resource = "fonts/sans_medium.ttf", weight = FontWeight.Medium),
-    Font(resource = "fonts/sans_bold.ttf", weight = FontWeight.Bold)
-)
-
+// Using default system fonts for Android
 val typography = Typography(
-    defaultFontFamily = codeFontFamily,
     h1 = TextStyle(
         fontWeight = FontWeight.Light,
         fontSize = 96.sp,

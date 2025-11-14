@@ -1,74 +1,43 @@
-package com.aab2apk.original
+package com.aab2apk.local
 
+import android.content.Context
+import android.content.SharedPreferences
 
-import com.esotericsoftware.kryo.Kryo
-import com.esotericsoftware.kryo.io.Input
-import com.esotericsoftware.kryo.io.Output
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.nio.file.Paths
+class FileStorageHelper(private val context: Context) {
 
-const val DB_PATH = "/storage"
+    private val prefs: SharedPreferences = context.getSharedPreferences("aab2apk_prefs", Context.MODE_PRIVATE)
 
-class FileStorageHelper {
-
-    private lateinit var kryo: Kryo
-
-    init {
-        initializeDir()
-    }
-
-    private fun getKryo(): Kryo {
-        return if (this::kryo.isInitialized) {
-            kryo
-        } else {
-            val kryo = Kryo()
-            kryo.register(KiteTable::class.java)
-            kryo
+    fun save(key: String, value: Any) {
+        when (value) {
+            is String -> prefs.edit().putString(key, value).apply()
+            is Int -> prefs.edit().putInt(key, value).apply()
+            is Boolean -> prefs.edit().putBoolean(key, value).apply()
+            is Float -> prefs.edit().putFloat(key, value).apply()
+            is Long -> prefs.edit().putLong(key, value).apply()
+            else -> prefs.edit().putString(key, value.toString()).apply()
         }
     }
 
-    private fun initializeDir() {
-        val file = File(getCurrentDir())
-        file.mkdir()
-    }
-
-    private fun getCurrentDir(): String {
-        return Paths.get("").toAbsolutePath().toString() + DB_PATH
-    }
-
-    private fun getPath(key: String): String {
-        return "${getCurrentDir()}/$key.kb"
-    }
-
-    fun <E> save(key: String, value: E) {
-        var kryoOutput: Output?
-        try {
-            val kiteTable = KiteTable(value)
-            val fileStream = FileOutputStream(File(getPath(key)))
-            kryoOutput = Output(fileStream)
-            getKryo().writeObject(kryoOutput, kiteTable)
-            kryoOutput.flush()
-            fileStream.flush()
-            kryoOutput.close()
-        } catch (e: Exception) {
-            throw KiteDbException(e.message)
+    @Suppress("UNCHECKED_CAST")
+    fun <T> read(key: String, defaultValue: T? = null): T? {
+        return when (defaultValue) {
+            is String -> prefs.getString(key, defaultValue) as T?
+            is Int -> prefs.getInt(key, defaultValue) as T?
+            is Boolean -> prefs.getBoolean(key, defaultValue) as T?
+            is Float -> prefs.getFloat(key, defaultValue) as T?
+            is Long -> prefs.getLong(key, defaultValue) as T?
+            null -> when {
+                prefs.contains(key) -> prefs.getString(key, null) as T?
+                else -> null
+            }
+            else -> prefs.getString(key, defaultValue.toString()) as T?
         }
-    }
-
-    fun read(key: String): Any? {
-        val keyFile = File(getPath(key))
-        if (!keyFile.exists()) return null
-        val kryoInput = Input(FileInputStream(keyFile))
-        val kiteTable = getKryo().readObject(kryoInput, KiteTable::class.java)
-        return kiteTable.mContent
     }
 
     fun delete(key: String): Boolean {
-        val keyFile = File(getPath(key))
-        return if (keyFile.exists()) {
-            keyFile.delete()
+        return if (prefs.contains(key)) {
+            prefs.edit().remove(key).apply()
+            true
         } else {
             false
         }

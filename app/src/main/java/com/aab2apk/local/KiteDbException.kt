@@ -1,4 +1,4 @@
-package com.aab2apk.original
+package com.aab2apk.local
 
 
 class KiteDbException : RuntimeException {

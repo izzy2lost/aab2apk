@@ -1,4 +1,4 @@
-package com.aab2apk.original
+package com.aab2apk.ui.components
 
 
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -25,7 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ui.Styles
+import com.aab2apk.ui.Styles
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

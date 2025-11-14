@@ -1,4 +1,4 @@
-package com.aab2apk.original
+package com.aab2apk.ui.components
 
 
 import androidx.compose.foundation.BorderStroke
@@ -20,7 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import ui.Styles
+import com.aab2apk.ui.Styles
 
 @Composable
 fun LoadingDialog(text: String) {
