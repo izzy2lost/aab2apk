@@ -1,0 +1,51 @@
+name: Build Native Bundletool ARM64
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-native:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install GraalVM (Java 21)
+        uses: graalvm/setup-graalvm@v1
+        with:
+          version: "21.0.2"
+          java-version: "21"
+          components: "native-image"
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip zip curl clang build-essential
+
+      - name: Download bundletool source
+        run: |
+          curl -L -o bundletool.zip https://github.com/google/bundletool/archive/refs/heads/master.zip
+          unzip bundletool.zip
+          mv bundletool-master bundletool-src
+
+      - name: Build bundletool.jar
+        working-directory: bundletool-src
+        run: |
+          ./gradlew build -x test
+          cp build/libs/bundletool-*.jar ../bundletool.jar
+
+      - name: Build Native Image (ARM64)
+        run: |
+          native-image \
+            --no-fallback \
+            --static \
+            -jar bundletool.jar \
+            bundletool
+
+      - name: Upload Native Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundletool-native-arm64
+          path: bundletool
