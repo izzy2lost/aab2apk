@@ -20,26 +20,27 @@ jobs:
       - name: Build aarch64 bundletool using buildx
         run: |
           docker buildx create --use || true
-          docker buildx build --load --platform linux/arm64 \
-            -t bundletool-arm64-builder \
+          docker buildx build --platform linux/arm64 \
+            --output type=local,dest=./output \
             -f - . <<'DOCKERFILE'
-          FROM ubuntu:22.04
-          RUN apt-get update && apt-get install -y curl unzip zip build-essential clang pkg-config zlib1g-dev openjdk-21-jdk-headless
+          FROM ubuntu:22.04 AS builder
+          RUN apt-get update && apt-get install -y curl unzip zip build-essential clang pkg-config zlib1g-dev openjdk-21-jdk-headless file
           WORKDIR /work
           COPY bundletool/bundletool.jar .
-          RUN curl -L -O https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-23.3.2/graalvm-ce-java21-linux-aarch64-23.3.2.tar.gz \
-            && tar -xzf graalvm-ce-java21-linux-aarch64-23.3.2.tar.gz \
-            && rm graalvm-ce-java21-linux-aarch64-23.3.2.tar.gz
-          ENV PATH=/work/graalvm-ce-java21-23.3.2/bin:$PATH
+          RUN curl -L -o graalvm.tar.gz https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-21.0.1/graalvm-community-jdk-21.0.1_linux-aarch64_bin.tar.gz \
+            && file graalvm.tar.gz \
+            && tar -xzf graalvm.tar.gz \
+            && rm graalvm.tar.gz \
+            && ls -la
+          ENV PATH=/work/graalvm-community-openjdk-21.0.1+12.1/bin:$PATH
+          RUN native-image --version
           RUN native-image --no-fallback -jar bundletool.jar -H:Name=bundletool-arm64
           RUN ls -lh bundletool-arm64
+          
+          FROM scratch AS export
+          COPY --from=builder /work/bundletool-arm64 /bundletool-arm64
           DOCKERFILE
-
-      - name: Extract binary from container
-        run: |
-          docker create --name temp-container --platform linux/arm64 bundletool-arm64-builder
-          docker cp temp-container:/work/bundletool-arm64 ./bundletool-arm64
-          docker rm temp-container
+          mv ./output/bundletool-arm64 ./bundletool-arm64
 
       - name: Verify binary
         run: |
